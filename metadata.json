@@ -1,0 +1,6 @@
+{
+  "name": "CAPTIO",
+  "description": "Gestão inteligente para profissionais de prótese capilar. Painel, clientes, agenda, vendas, produtos, financeiro e relatórios.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
