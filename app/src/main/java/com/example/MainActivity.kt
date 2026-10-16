@@ -21,14 +21,14 @@ import com.example.ui.components.AddClientDialog
 import com.example.ui.components.AddProductDialog
 import com.example.ui.components.AddTransactionDialog
 import com.example.ui.components.QuickActionSelectorDialog
-import com.example.ui.screens.AgendaScreen
+import com.example.ui.screens.AtendimentosScreen
 import com.example.ui.screens.ClientsScreen
 import com.example.ui.screens.FinanceScreen
 import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.MoreScreen
 import com.example.ui.screens.ProductsScreen
+import com.example.ui.screens.PublicRequestScreen
 import com.example.ui.screens.ReportsScreen
-import com.example.ui.screens.ShowcaseGridScreen
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.viewmodel.CaptioScreen
 import com.example.ui.viewmodel.CaptioViewModel
@@ -71,16 +71,9 @@ fun CaptioMainApp(
             .padding(innerPadding)
 
         when (currentScreen) {
-            CaptioScreen.SHOWCASE_GRID -> {
-                ShowcaseGridScreen(
-                    viewModel = viewModel,
-                    onNavigate = { viewModel.navigateTo(it) },
-                    onQuickAdd = { showQuickActionSheet = true },
-                    modifier = modifier
-                )
-            }
             CaptioScreen.HOME -> {
                 HomeScreen(
+                    viewModel = viewModel,
                     onNavigate = { viewModel.navigateTo(it) },
                     onQuickAdd = { showQuickActionSheet = true },
                     modifier = modifier
@@ -94,11 +87,18 @@ fun CaptioMainApp(
                     modifier = modifier
                 )
             }
-            CaptioScreen.AGENDA -> {
-                AgendaScreen(
+            CaptioScreen.ATENDIMENTOS -> {
+                AtendimentosScreen(
                     viewModel = viewModel,
                     onNavigate = { viewModel.navigateTo(it) },
                     onQuickAdd = { showQuickActionSheet = true },
+                    modifier = modifier
+                )
+            }
+            CaptioScreen.PUBLIC_REQUEST -> {
+                PublicRequestScreen(
+                    viewModel = viewModel,
+                    onNavigate = { viewModel.navigateTo(it) },
                     modifier = modifier
                 )
             }
@@ -163,7 +163,16 @@ fun CaptioMainApp(
                 initialDay = selectedDay,
                 onDismiss = { showAddAppointmentDialog = false },
                 onConfirm = { clientName, service, time, dayNumber, dayOfWeek, status ->
-                    viewModel.addAppointment(clientName, service, time, dayNumber, dayOfWeek, status)
+                    viewModel.addAppointment(
+                        clientName = clientName,
+                        clientPhone = "(11) 98765-4321",
+                        service = service,
+                        time = time,
+                        durationMinutes = 60,
+                        dayNumber = dayNumber,
+                        dayOfWeek = dayOfWeek,
+                        status = status
+                    )
                     showAddAppointmentDialog = false
                 }
             )

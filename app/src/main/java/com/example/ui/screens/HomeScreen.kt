@@ -2,6 +2,7 @@ package com.example.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,18 +23,24 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.EventNote
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,7 +48,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -51,28 +57,35 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.example.R
 import com.example.ui.components.CaptioBottomBar
 import com.example.ui.components.CaptioTopBarLogo
-import com.example.ui.theme.CaptioBgDark
 import com.example.ui.theme.CaptioBgDeep
 import com.example.ui.theme.CaptioCardBg
 import com.example.ui.theme.CaptioCardBgElevated
 import com.example.ui.theme.CaptioNeonGreen
+import com.example.ui.theme.CaptioOrange
 import com.example.ui.theme.CaptioPurpleLight
 import com.example.ui.theme.CaptioPurplePrimary
 import com.example.ui.theme.CaptioTextGray
-import com.example.ui.theme.CaptioTextWhite
+import com.example.ui.viewmodel.CaptioNotification
 import com.example.ui.viewmodel.CaptioScreen
+import com.example.ui.viewmodel.CaptioViewModel
 
 @Composable
 fun HomeScreen(
+    viewModel: CaptioViewModel,
     onNavigate: (CaptioScreen) -> Unit,
     onQuickAdd: () -> Unit,
-    modifier: Modifier = Modifier,
-    isEmbeddedInMockup: Boolean = false
+    modifier: Modifier = Modifier
 ) {
     var searchQuery by remember { mutableStateOf("") }
+    var showNotificationDialog by remember { mutableStateOf(false) }
+
+    val notifications by viewModel.notifications.collectAsState()
+    val pendingRequestsCount by viewModel.pendingRequestsCount.collectAsState()
+    val upcomingAppointments by viewModel.upcomingAppointments.collectAsState()
 
     Box(
         modifier = modifier
@@ -82,12 +95,12 @@ fun HomeScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = if (isEmbeddedInMockup) 12.dp else 18.dp)
+                .padding(horizontal = 18.dp)
                 .verticalScroll(rememberScrollState())
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Top Header: Hamburger, CAPTIO, Notifications
+            // Top Header: Hamburger Menu, CAPTIO Logo, Notifications Bell
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -106,13 +119,14 @@ fun HomeScreen(
 
                 CaptioTopBarLogo(iconSize = 26.dp, fontSize = 20)
 
-                // Notification Bell with red badge (2)
+                // Notification Bell with dynamic badge count
                 Box(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
                         .background(CaptioCardBg)
-                        .clickable { /* Notification dialog */ },
+                        .clickable { showNotificationDialog = true }
+                        .testTag("home_notif_btn"),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -121,33 +135,35 @@ fun HomeScreen(
                         tint = Color.White,
                         modifier = Modifier.size(20.dp)
                     )
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(top = 4.dp, end = 4.dp)
-                            .size(16.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFFF334B)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "2",
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
+                    if (notifications.isNotEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(top = 4.dp, end = 4.dp)
+                                .size(16.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFFF334B)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "${notifications.size}",
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Search Bar
+            // Search Bar (Interactive)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(44.dp)
-                    .clip(RoundedCornerShape(22.dp))
+                    .height(46.dp)
+                    .clip(RoundedCornerShape(23.dp))
                     .background(CaptioCardBg)
                     .padding(horizontal = 14.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -159,16 +175,95 @@ fun HomeScreen(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Buscar por cliente, serviço...",
-                    fontSize = 12.sp,
-                    color = CaptioTextGray
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = {
+                        searchQuery = it
+                        viewModel.setClientSearchQuery(it)
+                    },
+                    placeholder = {
+                        Text(
+                            text = "Buscar por cliente, serviço...",
+                            fontSize = 12.sp,
+                            color = CaptioTextGray
+                        )
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("home_search_input"),
+                    singleLine = true
                 )
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // 6 Quick Actions Grid (3 columns x 2 rows)
+            // DESTAQUE: Novas Solicitações Recebidas (Requisito 1)
+            if (pendingRequestsCount > 0) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(Color(0xFF2E195E), Color(0xFF1E1044))
+                            )
+                        )
+                        .border(1.dp, CaptioNeonGreen.copy(alpha = 0.6f), RoundedCornerShape(16.dp))
+                        .clickable { onNavigate(CaptioScreen.ATENDIMENTOS) }
+                        .padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .background(Color(0x2200FF66)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "$pendingRequestsCount",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Black,
+                            color = CaptioNeonGreen
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Novas Solicitações de Clientes",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Text(
+                            text = "$pendingRequestsCount pessoas aguardando confirmação",
+                            fontSize = 11.sp,
+                            color = CaptioTextGray
+                        )
+                    }
+
+                    Button(
+                        onClick = { onNavigate(CaptioScreen.ATENDIMENTOS) },
+                        colors = ButtonDefaults.buttonColors(containerColor = CaptioNeonGreen),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.height(34.dp)
+                    ) {
+                        Text("Ver", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // 6 Quick Actions Grid (Com "Atendimentos" substituindo "Agendamentos" genérico)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -181,11 +276,11 @@ fun HomeScreen(
                     testTag = "quick_clients"
                 )
                 QuickActionItem(
-                    title = "Agendamentos",
-                    icon = Icons.Default.CalendarMonth,
-                    onClick = { onNavigate(CaptioScreen.AGENDA) },
+                    title = "Atendimentos",
+                    icon = Icons.Default.EventNote,
+                    onClick = { onNavigate(CaptioScreen.ATENDIMENTOS) },
                     modifier = Modifier.weight(1f),
-                    testTag = "quick_agenda"
+                    testTag = "quick_atendimentos"
                 )
                 QuickActionItem(
                     title = "Vendas",
@@ -227,6 +322,102 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // DESTAQUE: Próximos Atendimentos (Requisito 1)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Próximos Atendimentos",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+
+                Text(
+                    text = "Ver todos",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = CaptioNeonGreen,
+                    modifier = Modifier
+                        .clickable { onNavigate(CaptioScreen.ATENDIMENTOS) }
+                        .padding(4.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            if (upcomingAppointments.isEmpty()) {
+                Text(
+                    text = "Nenhum atendimento confirmado próximo.",
+                    fontSize = 12.sp,
+                    color = CaptioTextGray
+                )
+            } else {
+                upcomingAppointments.forEach { appt ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(CaptioCardBg)
+                            .clickable { onNavigate(CaptioScreen.ATENDIMENTOS) }
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.width(46.dp)
+                        ) {
+                            Text(
+                                text = appt.time,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = CaptioNeonGreen
+                            )
+                            Text(
+                                text = "${appt.dayOfWeek} ${appt.dayNumber}",
+                                fontSize = 9.sp,
+                                color = CaptioTextGray
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(10.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = appt.clientName,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            Text(
+                                text = "${appt.service} • ${appt.durationMinutes} min",
+                                fontSize = 11.sp,
+                                color = CaptioTextGray
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0x2200FF66))
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = "Confirmado",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = CaptioNeonGreen
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             // "Resumo da semana" Card with 3D Robot mascot
             Box(
                 modifier = Modifier
@@ -244,7 +435,6 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Mascot Image
                     Image(
                         painter = painterResource(id = R.drawable.robot_mascot),
                         contentDescription = "Mascote CAPTIO",
@@ -267,7 +457,7 @@ fun HomeScreen(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Veja seu desempenho, novas vendas e agendamentos.",
+                            text = "Veja seu desempenho, novas vendas e atendimentos.",
                             fontSize = 11.sp,
                             color = CaptioTextGray,
                             lineHeight = 15.sp
@@ -276,7 +466,6 @@ fun HomeScreen(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    // Arrow circle button
                     Box(
                         modifier = Modifier
                             .size(36.dp)
@@ -286,7 +475,7 @@ fun HomeScreen(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = "Acessar",
+                            contentDescription = "Acessar Relatórios",
                             tint = Color.White,
                             modifier = Modifier.size(18.dp)
                         )
@@ -294,17 +483,23 @@ fun HomeScreen(
                 }
             }
 
-            // Bottom spacing for nav bar
-            Spacer(modifier = Modifier.height(if (isEmbeddedInMockup) 60.dp else 85.dp))
+            Spacer(modifier = Modifier.height(95.dp))
         }
 
-        // Bottom Navigation Bar
-        if (!isEmbeddedInMockup) {
-            CaptioBottomBar(
-                currentScreen = CaptioScreen.HOME,
-                onNavigate = onNavigate,
-                onQuickAdd = onQuickAdd,
-                modifier = Modifier.align(Alignment.BottomCenter)
+        // Bottom Navigation Bar (Início, Clientes, (+), Relatórios, Mais)
+        CaptioBottomBar(
+            currentScreen = CaptioScreen.HOME,
+            onNavigate = onNavigate,
+            onQuickAdd = onQuickAdd,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
+
+        // Notification Modal Dialog
+        if (showNotificationDialog) {
+            NotificationDialog(
+                notifications = notifications,
+                onDismiss = { showNotificationDialog = false },
+                onDismissItem = { viewModel.dismissNotification(it) }
             )
         }
     }
@@ -349,5 +544,108 @@ private fun QuickActionItem(
             fontWeight = FontWeight.SemiBold,
             color = Color.White
         )
+    }
+}
+
+@Composable
+private fun NotificationDialog(
+    notifications: List<CaptioNotification>,
+    onDismiss: () -> Unit,
+    onDismissItem: (String) -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(22.dp),
+            color = CaptioCardBgElevated,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Notificações da Clínica",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    IconButton(onClick = onDismiss) {
+                        Icon(Icons.Default.Close, contentDescription = "Fechar", tint = CaptioTextGray)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                if (notifications.isEmpty()) {
+                    Text(
+                        text = "Nenhuma nova notificação no momento.",
+                        fontSize = 12.sp,
+                        color = CaptioTextGray,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
+                } else {
+                    notifications.forEach { notif ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(CaptioCardBg)
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = notif.title,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = CaptioNeonGreen
+                                    )
+                                    Text(
+                                        text = notif.time,
+                                        fontSize = 10.sp,
+                                        color = CaptioTextGray
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = notif.message,
+                                    fontSize = 11.sp,
+                                    color = Color.White
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            IconButton(
+                                onClick = { onDismissItem(notif.id) },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Limpar",
+                                    tint = CaptioTextGray,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Button(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.buttonColors(containerColor = CaptioPurplePrimary),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("OK", color = Color.White)
+                }
+            }
+        }
     }
 }

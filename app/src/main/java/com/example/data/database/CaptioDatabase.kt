@@ -9,14 +9,15 @@ import com.example.data.dao.CaptioDao
 import com.example.data.model.Appointment
 import com.example.data.model.Client
 import com.example.data.model.Product
+import com.example.data.model.ServiceRequest
 import com.example.data.model.Transaction
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Database(
-    entities = [Client::class, Appointment::class, Product::class, Transaction::class],
-    version = 1,
+    entities = [Client::class, Appointment::class, Product::class, Transaction::class, ServiceRequest::class],
+    version = 2,
     exportSchema = false
 )
 abstract class CaptioDatabase : RoomDatabase() {
@@ -70,19 +71,53 @@ abstract class CaptioDatabase : RoomDatabase() {
             )
             dao.insertClients(initialClients)
 
-            // Seed appointments for Terça-feira (Ter 29) matching poster
+            // Seed appointments with duration and contact
             val initialAppointments = listOf(
-                Appointment(clientName = "Rafael Mendes", service = "Consulta • Ajuste", time = "08:00", dayOfWeek = "Ter", dayNumber = "29", status = "Confirmado"),
-                Appointment(clientName = "Lucas Ferreira", service = "Aplicação de Prótese", time = "09:00", dayOfWeek = "Ter", dayNumber = "29", status = "Confirmado"),
-                Appointment(clientName = "Gabriel Santos", service = "Manutenção", time = "10:00", dayOfWeek = "Ter", dayNumber = "29", status = "Pendente"),
-                Appointment(clientName = "Matheus Oliveira", service = "Avaliação", time = "12:00", dayOfWeek = "Ter", dayNumber = "29", status = "Confirmado"),
-                // Appointments for other days in the week strip
-                Appointment(clientName = "Daniel Costa", service = "Higienização • Corte", time = "10:00", dayOfWeek = "Seg", dayNumber = "28", status = "Confirmado"),
-                Appointment(clientName = "André Lima", service = "Aplicação de Prótese", time = "14:00", dayOfWeek = "Qua", dayNumber = "30", status = "Confirmado"),
-                Appointment(clientName = "Bruno Carvalho", service = "Manutenção Rápida", time = "09:30", dayOfWeek = "Qui", dayNumber = "31", status = "Confirmado"),
-                Appointment(clientName = "Thiago Ribeiro", service = "Consulta e Escolha", time = "11:00", dayOfWeek = "Sex", dayNumber = "01", status = "Confirmado")
+                Appointment(clientName = "Rafael Mendes", clientPhone = "(11) 98123-4567", service = "Consulta • Ajuste", time = "08:00", durationMinutes = 45, dayOfWeek = "Ter", dayNumber = "29", status = "Confirmado"),
+                Appointment(clientName = "Lucas Ferreira", clientPhone = "(11) 97234-5678", service = "Instalação de Prótese Capilar", time = "09:00", durationMinutes = 90, dayOfWeek = "Ter", dayNumber = "29", status = "Confirmado"),
+                Appointment(clientName = "Gabriel Santos", clientPhone = "(11) 96345-6789", service = "Manutenção de Prótese", time = "11:00", durationMinutes = 60, dayOfWeek = "Ter", dayNumber = "29", status = "Confirmado"),
+                Appointment(clientName = "Matheus Oliveira", clientPhone = "(11) 95456-7890", service = "Avaliação e Medição", time = "14:00", durationMinutes = 60, dayOfWeek = "Ter", dayNumber = "29", status = "Confirmado"),
+                Appointment(clientName = "Daniel Costa", clientPhone = "(11) 94567-8901", service = "Higienização • Corte", time = "10:00", durationMinutes = 60, dayOfWeek = "Seg", dayNumber = "28", status = "Concluído"),
+                Appointment(clientName = "André Lima", clientPhone = "(11) 93678-9012", service = "Instalação de Prótese Capilar", time = "14:00", durationMinutes = 120, dayOfWeek = "Qua", dayNumber = "30", status = "Confirmado"),
+                Appointment(clientName = "Bruno Carvalho", clientPhone = "(11) 92789-0123", service = "Manutenção de Prótese", time = "09:30", durationMinutes = 60, dayOfWeek = "Qui", dayNumber = "31", status = "Confirmado"),
+                Appointment(clientName = "Thiago Ribeiro", clientPhone = "(11) 91890-1234", service = "Consulta e Escolha", time = "11:00", durationMinutes = 60, dayOfWeek = "Sex", dayNumber = "01", status = "Confirmado")
             )
             dao.insertAppointments(initialAppointments)
+
+            // Seed received client requests from public link
+            val initialRequests = listOf(
+                ServiceRequest(
+                    clientName = "Lucas Silveira",
+                    phone = "(11) 98822-1133",
+                    serviceType = "Instalação de Prótese Capilar",
+                    preferredDate = "Esta semana",
+                    preferredPeriod = "Manhã",
+                    notes = "Tenho calvície grau 5, gostaria de avaliar um modelo micropele natural.",
+                    status = "Pendente",
+                    createdAt = "Hoje, às 10:15"
+                ),
+                ServiceRequest(
+                    clientName = "Carlos Eduardo",
+                    phone = "(11) 97711-2244",
+                    serviceType = "Manutenção de Prótese",
+                    preferredDate = "Próxima terça ou quarta",
+                    preferredPeriod = "Tarde",
+                    notes = "Uso micropele silk, preciso de troca de fita e corte de barba.",
+                    status = "Pendente",
+                    createdAt = "Hoje, às 11:40"
+                ),
+                ServiceRequest(
+                    clientName = "Felipe Rocha",
+                    phone = "(11) 99344-5566",
+                    serviceType = "Instalação de Prótese Capilar",
+                    preferredDate = "Sexta-feira",
+                    preferredPeriod = "Manhã",
+                    notes = "Primeira prótese, quero tirar dúvidas sobre fixação.",
+                    status = "Aceito",
+                    createdAt = "Ontem, às 16:20"
+                )
+            )
+            dao.insertServiceRequests(initialRequests)
 
             // Seed products matching the poster exactly
             val initialProducts = listOf(

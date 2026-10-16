@@ -22,9 +22,11 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.EventNote
 import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -135,11 +137,21 @@ fun MoreScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             MoreOptionItem(
-                title = "Agendamentos Inteligentes",
-                subtitle = "Agenda semanal, manutenções e horários",
-                icon = Icons.Default.CalendarMonth,
-                onClick = { onNavigate(CaptioScreen.AGENDA) },
-                testTag = "more_opt_agenda"
+                title = "Atendimentos",
+                subtitle = "Solicitações públicas, confirmações com WhatsApp e agenda",
+                icon = Icons.Default.EventNote,
+                onClick = { onNavigate(CaptioScreen.ATENDIMENTOS) },
+                testTag = "more_opt_atendimentos"
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            MoreOptionItem(
+                title = "Link Público de Solicitação",
+                subtitle = "Página compartilhável para interessados e redes sociais",
+                icon = Icons.Default.Link,
+                onClick = { onNavigate(CaptioScreen.PUBLIC_REQUEST) },
+                testTag = "more_opt_public_link"
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -155,7 +167,7 @@ fun MoreScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             Text(
-                text = "Exibição & Vitrine",
+                text = "Configurações & Suporte",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 color = CaptioTextGray
@@ -164,11 +176,11 @@ fun MoreScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             MoreOptionItem(
-                title = "Vitrine do Cartaz (Grade 3×2)",
-                subtitle = "Visualizar os 6 celulares em grade da apresentação",
-                icon = Icons.Default.GridView,
-                onClick = { onNavigate(CaptioScreen.SHOWCASE_GRID) },
-                testTag = "more_opt_showcase"
+                title = "Configurações da Clínica",
+                subtitle = "Dados do estabelecimento, expediente e recibos",
+                icon = Icons.Default.Settings,
+                onClick = { /* Settings action */ },
+                testTag = "more_opt_settings"
             )
 
             Spacer(modifier = Modifier.height(95.dp))

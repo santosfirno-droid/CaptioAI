@@ -21,12 +21,28 @@ data class Appointment(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val clientName: String,
-    val service: String, // e.g. "Consulta • Ajuste", "Aplicação de Prótese", "Manutenção", "Avaliação"
-    val time: String, // e.g. "08:00", "09:00", "10:00", "12:00"
-    val dayOfWeek: String = "Ter", // Seg, Ter, Qua, Qui, Sex
+    val clientPhone: String = "(11) 98765-4321",
+    val service: String, // e.g. "Instalação de Prótese Capilar", "Manutenção de Prótese", "Consulta • Ajuste", "Avaliação"
+    val time: String, // e.g. "08:00", "09:00", "10:00", "12:00", "14:00"
+    val durationMinutes: Int = 60, // 45, 60, 90, 120 min
+    val dayOfWeek: String = "Ter", // Seg, Ter, Qua, Qui, Sex, Sáb
     val dayNumber: String = "29", // 28, 29, 30, 31, 01
-    val status: String = "Confirmado", // "Confirmado", "Pendente", "Concluído"
+    val status: String = "Confirmado", // "Confirmado", "Pendente", "Concluído", "Cancelado"
     val notes: String = ""
+)
+
+@Entity(tableName = "service_requests")
+data class ServiceRequest(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val clientName: String,
+    val phone: String,
+    val serviceType: String, // "Instalação de Prótese Capilar" or "Manutenção de Prótese"
+    val preferredDate: String, // e.g. "Esta semana", "Próxima terça", "29/10"
+    val preferredPeriod: String, // "Manhã" or "Tarde"
+    val notes: String = "",
+    val status: String = "Pendente", // "Pendente", "Aceito", "Recusado"
+    val createdAt: String = "Hoje, às 10:15"
 )
 
 @Entity(tableName = "products")

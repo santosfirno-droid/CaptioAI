@@ -9,6 +9,7 @@ import androidx.room.Update
 import com.example.data.model.Appointment
 import com.example.data.model.Client
 import com.example.data.model.Product
+import com.example.data.model.ServiceRequest
 import com.example.data.model.Transaction
 import kotlinx.coroutines.flow.Flow
 
@@ -54,6 +55,22 @@ interface CaptioDao {
 
     @Query("SELECT COUNT(*) FROM appointments")
     suspend fun getAppointmentCount(): Int
+
+    // Service Requests (Solicitações de Atendimento)
+    @Query("SELECT * FROM service_requests ORDER BY id DESC")
+    fun getAllServiceRequests(): Flow<List<ServiceRequest>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertServiceRequest(request: ServiceRequest): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertServiceRequests(requests: List<ServiceRequest>)
+
+    @Update
+    suspend fun updateServiceRequest(request: ServiceRequest)
+
+    @Delete
+    suspend fun deleteServiceRequest(request: ServiceRequest)
 
     // Products
     @Query("SELECT * FROM products ORDER BY id ASC")

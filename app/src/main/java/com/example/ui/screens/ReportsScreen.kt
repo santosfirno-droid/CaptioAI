@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.EmojiEvents
@@ -27,12 +28,17 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,9 +54,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.CaptioBottomBar
-import com.example.ui.theme.CaptioBgDark
 import com.example.ui.theme.CaptioBgDeep
 import com.example.ui.theme.CaptioCardBg
+import com.example.ui.theme.CaptioCardBgElevated
 import com.example.ui.theme.CaptioNeonGreen
 import com.example.ui.theme.CaptioOrange
 import com.example.ui.theme.CaptioPurpleLight
@@ -66,11 +72,14 @@ fun ReportsScreen(
     viewModel: CaptioViewModel,
     onNavigate: (CaptioScreen) -> Unit,
     onQuickAdd: () -> Unit,
-    modifier: Modifier = Modifier,
-    isEmbeddedInMockup: Boolean = false
+    modifier: Modifier = Modifier
 ) {
     val metrics by viewModel.financialMetrics.collectAsState()
     val activeTab by viewModel.reportsTab.collectAsState()
+    val allClients by viewModel.clients.collectAsState()
+
+    var showPeriodDropdown by remember { mutableStateOf(false) }
+    var selectedPeriodLabel by remember { mutableStateOf("Últimos 30 dias") }
 
     val tabs = listOf("Vendas", "Clientes", "Financeiro")
 
@@ -82,7 +91,7 @@ fun ReportsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = if (isEmbeddedInMockup) 10.dp else 18.dp)
+                .padding(horizontal = 18.dp)
                 .verticalScroll(rememberScrollState())
         ) {
             Spacer(modifier = Modifier.height(8.dp))
@@ -112,7 +121,7 @@ fun ReportsScreen(
                 )
 
                 IconButton(
-                    onClick = { /* Calendar picker */ },
+                    onClick = { showPeriodDropdown = true },
                     modifier = Modifier.testTag("reports_calendar_btn")
                 ) {
                     Icon(
@@ -154,31 +163,55 @@ fun ReportsScreen(
             Spacer(modifier = Modifier.height(14.dp))
 
             // Dropdown Period Selector
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(CaptioCardBg)
-                    .clickable { /* Toggle period */ }
-                    .padding(horizontal = 14.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Últimos 30 dias",
-                    fontSize = 12.sp,
-                    color = Color.White
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowDown,
-                    contentDescription = "Selecionar Período",
-                    tint = CaptioTextGray,
-                    modifier = Modifier.size(16.dp)
-                )
+            Box {
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(CaptioCardBg)
+                        .clickable { showPeriodDropdown = true }
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = selectedPeriodLabel,
+                        fontSize = 12.sp,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowDown,
+                        contentDescription = "Selecionar Período",
+                        tint = CaptioTextGray,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = showPeriodDropdown,
+                    onDismissRequest = { showPeriodDropdown = false },
+                    modifier = Modifier.background(CaptioCardBgElevated)
+                ) {
+                    listOf("Últimos 7 dias", "Últimos 30 dias", "Últimos 90 dias", "Ano Vigente (2026)").forEach { p ->
+                        DropdownMenuItem(
+                            text = { Text(p, color = Color.White) },
+                            onClick = {
+                                selectedPeriodLabel = p
+                                val mapToPeriod = when (p) {
+                                    "Últimos 7 dias" -> "7 dias"
+                                    "Últimos 90 dias" -> "90 dias"
+                                    else -> "30 dias"
+                                }
+                                viewModel.setFinancePeriod(mapToPeriod)
+                                showPeriodDropdown = false
+                            }
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Main Revenue Graph Card (matching poster with glowing green curve and dots!)
+            // Main Dynamic Chart Card
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -202,7 +235,11 @@ fun ReportsScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Default.TrendingUp,
+                                imageVector = when (activeTab) {
+                                    "Clientes" -> Icons.Default.People
+                                    "Financeiro" -> Icons.Default.AccountBalance
+                                    else -> Icons.Default.TrendingUp
+                                },
                                 contentDescription = "Trend",
                                 tint = CaptioPurpleLight,
                                 modifier = Modifier.size(20.dp)
@@ -212,9 +249,14 @@ fun ReportsScreen(
                         Spacer(modifier = Modifier.width(10.dp))
 
                         Column {
+                            val mainVal = when (activeTab) {
+                                "Clientes" -> "${allClients.size} Clientes Registrados"
+                                "Financeiro" -> "Lucro Líq. R$ ${String.format(Locale.GERMANY, "%,.2f", metrics.netRevenue)}"
+                                else -> "R$ ${String.format(Locale.GERMANY, "%,.2f", metrics.totalRevenue)}"
+                            }
                             Text(
-                                text = "R$ ${String.format(Locale.GERMANY, "%,.2f", metrics.totalRevenue)}",
-                                fontSize = 22.sp,
+                                text = mainVal,
+                                fontSize = 18.sp,
                                 fontWeight = FontWeight.Black,
                                 color = Color.White
                             )
@@ -230,7 +272,6 @@ fun ReportsScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Line Chart with Neon Green dots
                     NeonLineChart(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -241,37 +282,87 @@ fun ReportsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 3 Stat Cards Row: Vendas (47), Clientes (38), Ticket médio (3.9x)
+            // 3 Stat Cards Row based on active tab
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                StatCard(
-                    icon = Icons.Default.ShoppingCart,
-                    iconTint = CaptioPurpleLight,
-                    value = "${metrics.salesCount}",
-                    label = "Vendas",
-                    modifier = Modifier.weight(1f)
-                )
-                StatCard(
-                    icon = Icons.Default.People,
-                    iconTint = CaptioPurpleLight,
-                    value = "38",
-                    label = "Clientes",
-                    modifier = Modifier.weight(1f)
-                )
-                StatCard(
-                    icon = Icons.Default.BarChart,
-                    iconTint = CaptioPurpleLight,
-                    value = "3.9x",
-                    label = "Ticket médio",
-                    modifier = Modifier.weight(1f)
-                )
+                when (activeTab) {
+                    "Clientes" -> {
+                        StatCard(
+                            icon = Icons.Default.People,
+                            iconTint = CaptioPurpleLight,
+                            value = "${allClients.count { it.status == "Ativo" }}",
+                            label = "Ativos",
+                            modifier = Modifier.weight(1f)
+                        )
+                        StatCard(
+                            icon = Icons.Default.CalendarMonth,
+                            iconTint = CaptioPurpleLight,
+                            value = "12",
+                            label = "Novas Próteses",
+                            modifier = Modifier.weight(1f)
+                        )
+                        StatCard(
+                            icon = Icons.Default.TrendingUp,
+                            iconTint = CaptioPurpleLight,
+                            value = "94%",
+                            label = "Retenção",
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    "Financeiro" -> {
+                        StatCard(
+                            icon = Icons.Default.TrendingUp,
+                            iconTint = CaptioPurpleLight,
+                            value = "82%",
+                            label = "Margem",
+                            modifier = Modifier.weight(1f)
+                        )
+                        StatCard(
+                            icon = Icons.Default.AccountBalance,
+                            iconTint = CaptioPurpleLight,
+                            value = "R$ 4.2k",
+                            label = "Insumos",
+                            modifier = Modifier.weight(1f)
+                        )
+                        StatCard(
+                            icon = Icons.Default.BarChart,
+                            iconTint = CaptioPurpleLight,
+                            value = "R$ 21.7k",
+                            label = "Líquido",
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    else -> { // Vendas
+                        StatCard(
+                            icon = Icons.Default.ShoppingCart,
+                            iconTint = CaptioPurpleLight,
+                            value = "${metrics.salesCount}",
+                            label = "Vendas",
+                            modifier = Modifier.weight(1f)
+                        )
+                        StatCard(
+                            icon = Icons.Default.People,
+                            iconTint = CaptioPurpleLight,
+                            value = "38",
+                            label = "Clientes",
+                            modifier = Modifier.weight(1f)
+                        )
+                        StatCard(
+                            icon = Icons.Default.BarChart,
+                            iconTint = CaptioPurpleLight,
+                            value = "3.9x",
+                            label = "Ticket médio",
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Motivational Banner Card: Trophy, "Seu negócio crescendo!", "Continue focado..."
+            // Motivational Banner Card: Trophy
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -322,18 +413,16 @@ fun ReportsScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(if (isEmbeddedInMockup) 60.dp else 90.dp))
+            Spacer(modifier = Modifier.height(95.dp))
         }
 
         // Bottom Navigation Bar
-        if (!isEmbeddedInMockup) {
-            CaptioBottomBar(
-                currentScreen = CaptioScreen.REPORTS,
-                onNavigate = onNavigate,
-                onQuickAdd = onQuickAdd,
-                modifier = Modifier.align(Alignment.BottomCenter)
-            )
-        }
+        CaptioBottomBar(
+            currentScreen = CaptioScreen.REPORTS,
+            onNavigate = onNavigate,
+            onQuickAdd = onQuickAdd,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
@@ -362,7 +451,7 @@ fun StatCard(
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = value,
-            fontSize = 16.sp,
+            fontSize = 15.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White
         )
@@ -404,7 +493,7 @@ fun NeonLineChart(modifier: Modifier = Modifier) {
             style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
         )
 
-        // Draw glowing circular points on line (matching poster)
+        // Draw glowing circular points on line
         points.forEach { pt ->
             drawCircle(
                 color = Color(0xFF00FF66),

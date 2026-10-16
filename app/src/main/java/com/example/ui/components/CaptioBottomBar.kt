@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Home
@@ -122,15 +123,15 @@ fun CaptioBottomBar(
                 )
             }
 
-            // Agenda
+            // Relatórios
             BottomNavItem(
-                icon = Icons.Filled.CalendarMonth,
-                label = "Agenda",
-                isSelected = currentScreen == CaptioScreen.AGENDA,
-                onClick = { onNavigate(CaptioScreen.AGENDA) },
+                icon = Icons.Filled.BarChart,
+                label = "Relatórios",
+                isSelected = currentScreen == CaptioScreen.REPORTS,
+                onClick = { onNavigate(CaptioScreen.REPORTS) },
                 iconSize = iconSize,
                 fontSize = fontSize,
-                testTag = "nav_agenda"
+                testTag = "nav_reports"
             )
 
             // Mais

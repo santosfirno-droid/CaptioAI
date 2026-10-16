@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Diamond
 import androidx.compose.material.icons.filled.FilterList
@@ -28,12 +29,17 @@ import androidx.compose.material.icons.filled.Paid
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,17 +54,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.CaptioBottomBar
-import com.example.ui.theme.CaptioBgDark
 import com.example.ui.theme.CaptioBgDeep
 import com.example.ui.theme.CaptioBluePix
 import com.example.ui.theme.CaptioCardBg
+import com.example.ui.theme.CaptioCardBgElevated
 import com.example.ui.theme.CaptioCardOrange
 import com.example.ui.theme.CaptioNeonGreen
 import com.example.ui.theme.CaptioOtherPurple
 import com.example.ui.theme.CaptioPurpleLight
 import com.example.ui.theme.CaptioPurplePrimary
 import com.example.ui.theme.CaptioTextGray
-import com.example.ui.theme.CaptioTextWhite
 import com.example.ui.viewmodel.CaptioScreen
 import com.example.ui.viewmodel.CaptioViewModel
 import java.util.Locale
@@ -68,11 +73,11 @@ fun FinanceScreen(
     viewModel: CaptioViewModel,
     onNavigate: (CaptioScreen) -> Unit,
     onQuickAdd: () -> Unit,
-    modifier: Modifier = Modifier,
-    isEmbeddedInMockup: Boolean = false
+    modifier: Modifier = Modifier
 ) {
     val metrics by viewModel.financialMetrics.collectAsState()
     val period by viewModel.financePeriod.collectAsState()
+    var showFilterMenu by remember { mutableStateOf(false) }
 
     val periods = listOf("7 dias", "30 dias", "90 dias", "Personalizado")
 
@@ -84,12 +89,12 @@ fun FinanceScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = if (isEmbeddedInMockup) 10.dp else 18.dp)
+                .padding(horizontal = 18.dp)
                 .verticalScroll(rememberScrollState())
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Top Bar: Menu, Trending icon + "Financeiro", Filter
+            // Top Bar: Back, Trending icon + "Financeiro", Filter
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -97,11 +102,11 @@ fun FinanceScreen(
             ) {
                 IconButton(
                     onClick = { onNavigate(CaptioScreen.HOME) },
-                    modifier = Modifier.testTag("finance_menu_btn")
+                    modifier = Modifier.testTag("finance_back_btn")
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Menu,
-                        contentDescription = "Menu",
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Voltar",
                         tint = Color.White
                     )
                 }
@@ -122,15 +127,33 @@ fun FinanceScreen(
                     )
                 }
 
-                IconButton(
-                    onClick = { /* Filter */ },
-                    modifier = Modifier.testTag("finance_filter_btn")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.FilterList,
-                        contentDescription = "Filtrar",
-                        tint = Color.White
-                    )
+                Box {
+                    IconButton(
+                        onClick = { showFilterMenu = true },
+                        modifier = Modifier.testTag("finance_filter_btn")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.FilterList,
+                            contentDescription = "Filtrar Período",
+                            tint = Color.White
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = showFilterMenu,
+                        onDismissRequest = { showFilterMenu = false },
+                        modifier = Modifier.background(CaptioCardBgElevated)
+                    ) {
+                        periods.forEach { p ->
+                            DropdownMenuItem(
+                                text = { Text(p, color = Color.White) },
+                                onClick = {
+                                    viewModel.setFinancePeriod(p)
+                                    showFilterMenu = false
+                                }
+                            )
+                        }
+                    }
                 }
             }
 
@@ -183,7 +206,7 @@ fun FinanceScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Total Vendido",
+                            text = "Total Vendido ($period)",
                             fontSize = 12.sp,
                             color = CaptioTextGray
                         )
@@ -207,7 +230,6 @@ fun FinanceScreen(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // Stylized Neon Green ascending bars visualizer (matching poster!)
                     NeonBarChart(modifier = Modifier.fillMaxWidth().height(48.dp))
                 }
             }
@@ -242,7 +264,7 @@ fun FinanceScreen(
                         )
                     }
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "Vendas", fontSize = 11.sp, color = CaptioTextGray)
+                    Text(text = "Vendas Realizadas", fontSize = 11.sp, color = CaptioTextGray)
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "${metrics.salesCount}",
@@ -329,7 +351,7 @@ fun FinanceScreen(
                 icon = Icons.Default.CreditCard,
                 iconColor = CaptioCardOrange,
                 iconBg = Color(0x22FF9800),
-                name = "Cartão",
+                name = "Cartão de Crédito/Débito",
                 amountFormatted = "R$ ${String.format(Locale.GERMANY, "%,.2f", metrics.cardAmount)}",
                 percentage = "${metrics.cardPercent}%"
             )
@@ -341,12 +363,12 @@ fun FinanceScreen(
                 icon = Icons.Default.MoreHoriz,
                 iconColor = CaptioOtherPurple,
                 iconBg = Color(0x22A855F7),
-                name = "Outros",
+                name = "Outros (Dinheiro/Boleto)",
                 amountFormatted = "R$ ${String.format(Locale.GERMANY, "%,.2f", metrics.othersAmount)}",
                 percentage = "${metrics.othersPercent}%"
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Register Transaction Button
             Button(
@@ -360,18 +382,16 @@ fun FinanceScreen(
                 Text("+ Registrar Venda / Recebimento", color = Color.White, fontWeight = FontWeight.Bold)
             }
 
-            Spacer(modifier = Modifier.height(if (isEmbeddedInMockup) 60.dp else 90.dp))
+            Spacer(modifier = Modifier.height(95.dp))
         }
 
         // Bottom Navigation Bar
-        if (!isEmbeddedInMockup) {
-            CaptioBottomBar(
-                currentScreen = CaptioScreen.FINANCE,
-                onNavigate = onNavigate,
-                onQuickAdd = onQuickAdd,
-                modifier = Modifier.align(Alignment.BottomCenter)
-            )
-        }
+        CaptioBottomBar(
+            currentScreen = CaptioScreen.FINANCE,
+            onNavigate = onNavigate,
+            onQuickAdd = onQuickAdd,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
@@ -411,7 +431,7 @@ fun PaymentMethodRow(
 
         Text(
             text = name,
-            fontSize = 13.sp,
+            fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
             color = Color.White,
             modifier = Modifier.weight(1f)

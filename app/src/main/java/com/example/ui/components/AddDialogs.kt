@@ -406,7 +406,7 @@ fun AddProductDialog(
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = {
-                            val price = priceText.toDoubleOrNull() ?: 50.0
+                            val price = priceText.replace(',', '.').toDoubleOrNull() ?: 50.0
                             val stock = stockText.toIntOrNull() ?: 10
                             if (name.isNotBlank()) {
                                 onConfirm(name, price, category, stock, "Ativo")
@@ -505,7 +505,7 @@ fun AddTransactionDialog(
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = {
-                            val amount = amountText.toDoubleOrNull() ?: 100.0
+                            val amount = amountText.replace(',', '.').toDoubleOrNull() ?: 100.0
                             if (title.isNotBlank()) {
                                 onConfirm(title, amount, method)
                             }
